@@ -36,7 +36,7 @@ static const uint8_t BSP_HEADER = 2; // STX + LENGTH
 
 static const uint8_t DISPLAY_ROW = 0;
 static const uint8_t DISPLAY_REFRESH = 1;
-static const uint8_t ROW_MESSAGE_LENGTH = 17; // header + 128 / 8
+static const uint8_t ROW_MESSAGE_LENGTH = 18; // header + 128 / 8
 
 static const uint8_t BITMASKS[] = {128, 64, 32, 16, 8, 4, 2, 1};
 
@@ -47,6 +47,7 @@ void setup()   {
   display.clearDisplay();
   display.display();
   Serial.begin(19200);
+  Serial.flush();
 }
 
 static uint8_t in_buffer[MSG_SIZE];
@@ -145,11 +146,18 @@ static void process_buffer(){
       break;
     }
     case DISPLAY_ROW: {
-      for (uint8_t x = 0; x < IMAGE_WIDTH; x++){
-        uint8_t next_level = BITMASKS[x % 8] & in_buffer[4 + x / 8];
-        display.drawPixel(x, in_buffer[3], next_level);
+      for (uint8_t i = 0; i < 16; i++) {
+        for (uint8_t j = 0; j < 8; j++){
+          uint8_t x = i * 8 + j;
+          uint8_t next_level = (BITMASKS[j] & in_buffer[4+i]) > 0 ? 1 : 0;
+          display.drawPixel(x, in_buffer[3], next_level);
+        }
       }
-      //display.display(); //TODO: remove
+      // for (uint8_t x = 0; x < IMAGE_WIDTH; x++){
+      //   uint8_t next_level = BITMASKS[x % 8] & in_buffer[4 + x / 8];
+      //   display.drawPixel(x, in_buffer[3], next_level);
+      // }
+      // display.display(); //TODO: remove
       break;
     }
     default: {
