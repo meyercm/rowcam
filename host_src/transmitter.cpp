@@ -51,6 +51,7 @@ int main(int argc, char* argv[]){
   clear_stdin();
 
   for (uint8_t y = 0; y < IMAGE_HEIGHT; y++){
+    fprintf(stderr, "starting row %d\n", y+1);
     // For each row, read the pixels, make a row message, send it, wait for an ack
     fread(&in_buffer, 1, IMAGE_WIDTH * PIXEL_SIZE, f);
     size_t length = craft_message(in_buffer, out_buffer, y);
@@ -58,9 +59,11 @@ int main(int argc, char* argv[]){
     wait_for_ack(out_buffer, length, BSP_RESEND_ATTEMPTS);
   }
   // sent the whole image, instruct the display to refresh
+  fprintf(stderr, "sending refresh cmd\n");
   send_refresh();
   // clean up
   fclose(f);
+  fprintf(stderr, "done OK\n");
   return 0;
 }
 
@@ -105,8 +108,10 @@ static void wait_for_ack(uint8_t* out_buffer, size_t length, uint8_t attempts){
   uint8_t buffer[1];
   read(STDIN, &buffer, 1);
   if (buffer[0] == BSP_ACK) {
+    fprintf(stderr, "Got ACK\n");
     return;
   } else if (buffer[0] == BSP_NAK){
+    fprintf(stderr, "Got NAK\n");
     send(out_buffer, length);
     wait_for_ack(out_buffer, length, attempts - 1);
   }
